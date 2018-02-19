@@ -1,0 +1,28 @@
+{
+  "manifest_version": 2,
+
+  "name": "Sunset Timer",
+  "description": "A tab switching timer made custom for a gallery project",
+  "version": "1.0.1",
+
+  "browser_action": {
+   "default_icon": "icon16.png",
+   "default_popup": "popup.html"
+  },
+  "permissions": [
+    "tabs"
+  ],
+  "content_scripts": [ {
+  "run_at": "document_start",
+  "matches": ["http://*/", "https://*/"],
+  "js": ["jquery-3.1.1.min.js", "content.js" ],
+  "css": ["style.css"]
+} ],
+  "background":{
+    "scripts": [ "jquery-3.1.1.min.js", "background2.js"]
+  },
+  "web_accessible_resources": [
+    "templates/counter.html",
+    "images/*.png"
+  ]
+}
