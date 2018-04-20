@@ -1,3 +1,61 @@
+const turkeyURL = "https://video.nest.com/live/CdolW540tc";
+const corgiURL = "https://www.youtube.com/watch?v=b9lb-T9FrAg"
+const textURL = "https://www.magaliduzant.com/eastlight";
+let activeTab = {};
+let counter = 1;
+let timerFunc = null;
+
+function waitUntilSwitch2(times) {
+  console.log("CHECKING FOR SWITCH...");
+  console.log(times)
+  let d = new Date();
+  let currentTime = formatTimeString(`${d.getHours()}:${d.getMinutes()}`);
+  console.log(`the current time is: ${currentTime}`);
+  let sunPresent = false;
+  for (var i = 0; i < times.length; i++) {
+    if ( times[i].timeStart <= currentTime && currentTime <= times[i].timeEnd ) {
+      sunPresent = true;
+      console.log(`We have a match! Winning time is ${currentTime}`)
+      console.log(`found in ${JSON.stringify(times[i])}`)
+      console.log(`activeTab is ${JSON.stringify(activeTab)}`)
+      console.log(`!activeTab.timeEnd ${!activeTab.timeEnd}`)
+      console.log(`currentTime >= activeTab.timeEnd is ${currentTime >= activeTab.timeEnd}`)
+
+      if ( (!activeTab.timeEnd || currentTime !== activeTab.timeEnd) && times[i].url !== activeTab.url ) {
+        console.log(`we are allowed to switch!`)
+        console.log(`${currentTime} greater or eq than ${activeTab.timeEnd} is ${currentTime >= activeTab.timeEnd}`)
+        console.log(`activeTab has timeEnd?: ${!activeTab.timeEnd}`)
+
+        activeTab = times[i];
+        console.log(`I have changed the activeTab to ${JSON.stringify(times[i])}`)
+        switchToNew(times[i].url);
+        break;
+      }
+    } else {
+
+    }
+  }
+  if ( !sunPresent ) {
+    //debugger;
+    console.log("sunPresent was false!")
+    switchToNew(textURL);
+  }
+
+}
+
+function switchToNew(tabURL) {
+  chrome.windows.getLastFocused( {populate: true}, function (window) {
+    console.log(window);
+    let tabID = getTabID(window.tabs, tabURL);
+    if (tabID) {
+      console.log(`updating ${tabURL} to active`);
+      chrome.tabs.update(tabID, {active: true, selected: true }, function(tab) {
+        console.log("finished  forward!", tabURL);
+      })
+    }
+  });
+}
+
 function wait(sec) {
   let tabStartTime = new Date();
   while (Math.abs( new Date() - tabStartTime ) <= sec * 1000){
@@ -36,22 +94,34 @@ function switchBackward(window){
         wait(5)
         return;
       });
-
     }
   }
 }
 
-function formatTime(timeString) {
-  if (timeString.indexOf(":") === 1) {
-      return `0${timeString}`;
+function formatTimeString(timeString){
+  console.log(`init timeString: ${timeString}`);
+  return parseInt(timeString.split(":").map(function(item, index){
+    if (item.length < 2) {
+      return `0${item}`;
+    }
+    return item;
+  }).join(""))
+}
+
+function formatTimes(times) {
+  console.log(times);
+  for (var i = 0; i < times.length; i++) {
+    console.log(times[i]);
+    times[i].timeStart = formatTimeString(times[i].timeStart);
+    times[i].timeEnd = formatTimeString(times[i].timeEnd);
   }
-  return timeString;
+  console.log(`times updated to ${times}`)
+  return times;
 }
 
 function getTabID(tabs, url) {
   for (var i = 0; i < tabs.length; i++) {
-    console.log(`comparing ${tabs[i].url} and ${url}`)
-    console.log(`comparing ${tabs[i].url.length} and ${url.length}`)
+    //console.log(`comparing ${tabs[i].url} and ${url}`)
     if (tabs[i].url === url) {
       console.log(tabs[i]);
       return tabs[i].id;
@@ -61,64 +131,15 @@ function getTabID(tabs, url) {
   console.log("unable to locate that url in your tabs!");
   return null;
 }
-function handleTimer(tab1Time, tab2Time) {
-  // console.log("element outside: ", document.getElementById("tab1Time"));
-  console.log(`I was submitted with tab1Time of ${tab1Time}`);
-  console.log(`I was submitted with tab2Time of ${tab2Time}`);
 
-  tab1Time = formatTime(tab1Time);
-  tab2Time = formatTime(tab2Time);
-  console.log(`Formatted to ${tab1Time}`);
-  console.log(`Formatted to ${tab2Time}`);
+function handleTimer(times) {
 
+  const sunsetTimes = formatTimes(times);
 
-
-  // const timer1 = parseInt(document.getElementById("tab1Time").value) * 1000;
-  // const timer2 = parseInt(document.getElementById("tab2Time").value) * 1000;
-    // console.log("element: ", document.getElementById("tab1Time"));
-    // console.log("document: ", document);
-
-  // $('#tab1Time').val("fgg");
-  // $('#tab2Time').val("fgg");
-
-
-  chrome.windows.getLastFocused( {populate: true}, function (window)  {
-      console.log(window.tabs)
-      const turkeyTabID = getTabID(window.tabs, "https://video.nest.com/live/CdolW540tc");
-      const corgiTab = getTabID(window.tabs, "https://www.youtube.com/watch?v=b9lb-T9FrAg");
-      console.log(`turkeyTabID: ${turkeyTabID}`);
-      // Finding the selected tab.
-          // Selecting the next tab.
-          // chrome.tabs.update(window.tabs[i].id, {active: false});
-      console.log(`updating ${turkeyTabID} to active`);
-      console.log(window)
-      wait(3)
-      chrome.tabs.update(turkeyTabID, {active: true, selected: true }, function(tab ){
-        console.log("finished forward!", tab);
-        chrome.windows.getLastFocused( {populate: true}, function (window)  {
-          // Finding the selected tab.
-              // Selecting the prev tab.
-            wait(3)
-
-            // chrome.tabs.update(window.tabs[i].id, {active: false});
-            chrome.tabs.update(corgiTab, {active: true}, function(){
-              console.log("finished backward!");
-              return;
-            });
-
-
-        });
-
-      });
-
-
-      const debug = new Date();
-      while (Math.abs( new Date() - debug ) <= 8000){
-        console.log(`waiting ${5}ms`);
-      }
-
-  });
-
+  timerFunc = setInterval(function() { waitUntilSwitch2(sunsetTimes); }, 5000);
+  console.log(`timerFunc is now ${timerFunc}`);
+  console.log(`type ${typeof timerFunc}`);
+  console.log("past set int")
 
 
 }
@@ -126,9 +147,19 @@ function handleTimer(tab1Time, tab2Time) {
 
 
 chrome.runtime.onMessage.addListener( function(request,sender,sendResponse) {
+    counter= counter +1;
+    console.log("COUNTER: ", counter);
+    console.log(`request greeting: ${request.greeting}`)
     if( request.greeting === "GetURL" ) {
-      handleTimer(request.tab1Time, request.tab2Time);
+      console.log("HERE")
+      console.log(request.tabTimes)
+      handleTimer(request.tabTimes);
       sendResponse("i worked!")
+    } else if ( request.greeting === "Stop" ) {
+      console.log(`i got the stop msg: ${timerFunc}`)
+      if (timerFunc) {
+        clearInterval(timerFunc);
+      }
     }
 
 })

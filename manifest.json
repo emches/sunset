@@ -19,7 +19,8 @@
   "css": ["style.css"]
 } ],
   "background":{
-    "scripts": [ "jquery-3.1.1.min.js", "background2.js"]
+    "scripts": [ "jquery-3.1.1.min.js", "background2.js"],
+    "persistent": true
   },
   "web_accessible_resources": [
     "templates/counter.html",
