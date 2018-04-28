@@ -4,6 +4,7 @@ const textURL = "https://www.magaliduzant.com/eastlight";
 let activeTab = {};
 let counter = 1;
 let timerFunc = null;
+let textPresent = false;
 
 function waitUntilSwitch2(times) {
   console.log("CHECKING FOR SWITCH...");
@@ -13,7 +14,7 @@ function waitUntilSwitch2(times) {
   console.log(`the current time is: ${currentTime}`);
   let sunPresent = false;
   for (var i = 0; i < times.length; i++) {
-    if ( times[i].timeStart <= currentTime && currentTime <= times[i].timeEnd ) {
+    if ( times[i].timeStart <= currentTime && currentTime < times[i].timeEnd ) {
       sunPresent = true;
       console.log(`We have a match! Winning time is ${currentTime}`)
       console.log(`found in ${JSON.stringify(times[i])}`)
@@ -21,37 +22,85 @@ function waitUntilSwitch2(times) {
       console.log(`!activeTab.timeEnd ${!activeTab.timeEnd}`)
       console.log(`currentTime >= activeTab.timeEnd is ${currentTime >= activeTab.timeEnd}`)
 
-      if ( (!activeTab.timeEnd || currentTime !== activeTab.timeEnd) && times[i].url !== activeTab.url ) {
+      if ( !activeTab.timeEnd || times[i].url !== activeTab.url ) {
         console.log(`we are allowed to switch!`)
         console.log(`${currentTime} greater or eq than ${activeTab.timeEnd} is ${currentTime >= activeTab.timeEnd}`)
         console.log(`activeTab has timeEnd?: ${!activeTab.timeEnd}`)
 
         activeTab = times[i];
-        console.log(`I have changed the activeTab to ${JSON.stringify(times[i])}`)
-        switchToNew(times[i].url);
+        replaceHTML(times[i].location)
+        // switchToNew(times[i].url, function(tab) {
+        //   activeTab = times[i];
+        //   console.log(`I have changed the activeTab to ${JSON.stringify(times[i])}`)
+        // });
         break;
       }
     } else {
-
+      console.log("Couldn't find a match with: ");
+      console.log("timeStart: ", times[i].timeStart);
+      console.log("timeEnd: ", times[i].timeEnd);
+      console.log("currentTime: ", currentTime);
     }
   }
-  if ( !sunPresent ) {
-    //debugger;
-    console.log("sunPresent was false!")
-    switchToNew(textURL);
+  if ( !sunPresent && !textPresent) {
+    debugger;
+    console.log("sunPresent was false!");
+    // switchToNew(textURL, function(tab) {
+    //   console.log(`I have changed the activeTab to the text page of ${tab}`)
+    // });
+    textPresent = true;
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.tabs.update(tabs[0].id, {url: tabs[0].url});
+
+    });
   }
 
 }
 
-function switchToNew(tabURL) {
+function replaceHTML(vidLocation){
+  // document.getElementsByTagName('body')[0].innerHTML =
+  // "<iframe allowfullscreen \
+  // webkitallowfullscreen mozallowfullscreen \
+  // src='https://video.nest.com/embedded/live/uWpIov7zE9' \
+  // frameborder='0' \
+  // width=" + `'${window.innerWidth}' `+
+  // " height=" + `'${window.innerHeight}' `+ "></iframe>";
+  console.log("REPLACITNG...")
+  // chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+  //   console.log(tabs)
+  //   let activeTab = tabs[0];
+  //   console.log(`sending message to: ${JSON.stringify(activeTab.id)}`)
+  //   chrome.tabs.sendMessage(activeTab.id, {message: "nyc"}, function(response){
+  //     console.log("sent: ", response);
+  //   });
+  // });
+  if (vidLocation === "NYC"){
+    console.log("switching to NYC...")
+    chrome.tabs.executeScript({
+      file:'switchNYC.js'
+    })
+  } else {
+    console.log("switching to Mardin...")
+    chrome.tabs.executeScript({
+      file:'switchMardin.js'
+    })
+  }
+
+}
+
+function switchToNew(tabURL, callback) {
   chrome.windows.getLastFocused( {populate: true}, function (window) {
     console.log(window);
     let tabID = getTabID(window.tabs, tabURL);
     if (tabID) {
       console.log(`updating ${tabURL} to active`);
-      chrome.tabs.update(tabID, {active: true, selected: true }, function(tab) {
-        console.log("finished  forward!", tabURL);
+      chrome.windows.update(window.id, { state: "fullscreen" }, function (window) {
+        chrome.tabs.update(tabID, {active: true, selected: true }, function(tab) {
+          console.log("finished  forward!", tabURL);
+          callback(tab);
+        })
       })
+
     }
   });
 }
@@ -60,41 +109,6 @@ function wait(sec) {
   let tabStartTime = new Date();
   while (Math.abs( new Date() - tabStartTime ) <= sec * 1000){
     console.log(`waiting ${sec} seconds`);
-  }
-}
-
-function switchForward(window){
-  for (var i = 0; i < window.tabs.length; i++) {
-// Finding the selected tab.
-    if (window.tabs[i].active) {
-      // Selecting the next tab.
-      // chrome.tabs.update(window.tabs[i].id, {active: false});
-      console.log(`updating ${i} to active`);
-      wait(5)
-      chrome.tabs.update(window.tabs[i+1].id, {active: true, selected: true }, function(tab ){
-        console.log("finished forward!", tab);
-        wait(5)
-        return;
-      });
-    }
-  }
-}
-
-function switchBackward(window){
-  for (var i = 0; i < window.tabs.length; i++) {
-// Finding the selected tab.
-    console.log(`checking tab ${i}`)
-    if (window.tabs[i].active) {
-      // Selecting the prev tab.
-      console.log(`going to tab ${i-1} `)
-      wait(5)
-      // chrome.tabs.update(window.tabs[i].id, {active: false});
-      chrome.tabs.update(window.tabs[i-1].id, {active: true}, function(){
-        console.log("finished backward!");
-        wait(5)
-        return;
-      });
-    }
   }
 }
 
@@ -145,12 +159,18 @@ function handleTimer(times) {
 }
 
 
-
 chrome.runtime.onMessage.addListener( function(request,sender,sendResponse) {
     counter= counter +1;
     console.log("COUNTER: ", counter);
     console.log(`request greeting: ${request.greeting}`)
     if( request.greeting === "GetURL" ) {
+      chrome.windows.getLastFocused( {populate: true}, function (window) {
+        console.log("WINDOW: ", window);
+        chrome.windows.update(window.id, { state: "fullscreen" }, function (window) {
+          console.log("updated: ", window)
+        })
+      });
+
       console.log("HERE")
       console.log(request.tabTimes)
       handleTimer(request.tabTimes);

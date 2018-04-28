@@ -10,12 +10,15 @@
    "default_popup": "popup.html"
   },
   "permissions": [
-    "tabs"
+    "tabs",
+    "notifications",
+    "http://*/",
+    "https://*/"
   ],
   "content_scripts": [ {
   "run_at": "document_start",
   "matches": ["http://*/", "https://*/"],
-  "js": ["jquery-3.1.1.min.js", "content.js" ],
+  "js": ["jquery-3.1.1.min.js", "content.js", "formatTimes.js","switchMardin.js","switchNYC.js" ],
   "css": ["style.css"]
 } ],
   "background":{
