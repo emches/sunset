@@ -6,14 +6,12 @@
     <script src="gifs.js"></script>
     <script src="content.js"></script>
     <script src="jquery-ui.js"></script>
+    <script src="formatTimes.js"></script>
 
 
     <link rel="stylesheet" href="jquery-ui.css">
     <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="bootstrap.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="spinner.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="fontawesome-all.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="fontawesome.css" media="screen" />
 
   </head>
   <body>
@@ -21,15 +19,27 @@
       <h1>Select Sunset Timer!</h1>
       <form id="tab-form" class="form">
         <div class="form-group row">
-          <label for="inputEmail3" class="col-sm-10 col-form-label">Tab 1</label>
+          <label for="nyc1" class="col-sm-10 col-form-label">NYC Sunset Begin</label>
           <div class="col-sm-2">
-            <input type="text" class="form-control" id="tab1Time" placeholder="seconds">
+            <input type="text" class="form-control" id="nyc1Time" placeholder="seconds">
           </div>
         </div>
         <div class="form-group row">
-          <label for="inputEmail3" class="col-sm-10 col-form-label">Tab 2</label>
+          <label for="nyc2" class="col-sm-10 col-form-label">NYC Sunset End</label>
           <div class="col-sm-2">
-            <input type="text" class="form-control" id="tab2Time" placeholder="seconds">
+            <input type="text" class="form-control" id="nyc2Time" placeholder="seconds">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="turkey1" class="col-sm-10 col-form-label">Turkey Sunset Begin</label>
+          <div class="col-sm-2">
+            <input type="text" class="form-control" id="turkey1Time" placeholder="seconds">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="turkey2" class="col-sm-10 col-form-label">Turkey Sunset End</label>
+          <div class="col-sm-2">
+            <input type="text" class="form-control" id="turkey2Time" placeholder="seconds">
           </div>
         </div>
         <div class="row">
@@ -38,6 +48,11 @@
           </div>
         </div>
       </form>
+      <div class="row">
+        <div class="col-sm-12 text-center">
+          <button  class="btn-danger btn" id="timer-stop">STOP</button>
+        </div>
+      </div>
     </div>
 
   </body>

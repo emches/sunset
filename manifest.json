@@ -10,16 +10,20 @@
    "default_popup": "popup.html"
   },
   "permissions": [
-    "tabs"
+    "tabs",
+    "notifications",
+    "http://*/",
+    "https://*/"
   ],
   "content_scripts": [ {
   "run_at": "document_start",
   "matches": ["http://*/", "https://*/"],
-  "js": ["jquery-3.1.1.min.js", "content.js" ],
+  "js": ["jquery-3.1.1.min.js", "content.js", "formatTimes.js","switchMardin.js","switchNYC.js" ],
   "css": ["style.css"]
 } ],
   "background":{
-    "scripts": [ "jquery-3.1.1.min.js", "background2.js"]
+    "scripts": [ "jquery-3.1.1.min.js", "background2.js"],
+    "persistent": true
   },
   "web_accessible_resources": [
     "templates/counter.html",
